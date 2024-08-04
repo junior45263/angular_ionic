@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/auth.service'; // Actualizado con la ruta correcta
+import { AuthService } from 'src/app/auth.service';
+import { AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-tab3',
@@ -9,10 +10,18 @@ import { AuthService } from 'src/app/auth.service'; // Actualizado con la ruta c
 })
 export class Tab3Page implements OnInit {
   editForm!: FormGroup;
+  isAlertOpen = false;
+  alertButtons = [
+    {
+      text: 'OK',
+      role: 'cancel',
+    },
+  ];
 
   constructor(
     private authService: AuthService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private alertController: AlertController // Inject AlertController
   ) {}
 
   ngOnInit(): void {
@@ -26,12 +35,26 @@ export class Tab3Page implements OnInit {
     });
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.editForm.valid) {
-      this.authService
-        .login(this.editForm.value)
-        .then((res) => console.log(res))
-        .catch((err) => console.error(err));
+      try {
+        const res = await this.authService.login(this.editForm.value);
+        this.showAlert(
+          'Login Successful',
+          'You have been logged in successfully.'
+        );
+      } catch (err) {
+        this.showAlert('Login Failed', 'There was an error logging in.');
+      }
     }
+  }
+
+  async showAlert(header: string, message: string): Promise<void> {
+    const alert = await this.alertController.create({
+      header: header,
+      message: message,
+      buttons: this.alertButtons,
+    });
+    await alert.present();
   }
 }
